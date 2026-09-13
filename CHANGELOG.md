@@ -1,5 +1,10 @@
 # Changes
 
+## 0.1.10
+- Downloads the ZIP matching the published version, without a GitHub landing page.
+- ZIP and extracted folder carry the version; installed JSX remains scriptMe_AE.jsx.
+- Accepted by Drew for sharing after AE testing; broader OS/AE coverage remains pending.
+
 ## 0.1.9
 - Direct ZIP download without a repository landing page; accepted by Drew.
 - Versioned distribution: scriptMeAE_v0.1.9.zip extracts into scriptMeAE_v0.1.9/.

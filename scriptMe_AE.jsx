@@ -1,8 +1,8 @@
-/* scriptMe AE v0.1.9 — native ScriptUI / ExtendScript (ES3)
+/* scriptMe AE v0.1.10 — native ScriptUI / ExtendScript (ES3)
    Install in Scripts/ScriptUI Panels. See README.md. */
 (function (host) {
     var KEY = "DFP_scriptMe_AE", GLOBAL = "__DFP_scriptMeAE_v1";
-    var VERSION = "0.1.9";
+    var VERSION = "0.1.10";
     var DOWNLOAD_URL = "https://github.com/drewDFP74/scriptMeAE/raw/refs/heads/main/scriptMeAE.zip";
     var UPDATE_URL = "https://raw.githubusercontent.com/drewDFP74/scriptMeAE/main/latest.txt";
     var self = File($.fileName).absoluteURI;
@@ -26,7 +26,7 @@
     var win = host instanceof Panel ? host : new Window("palette", "scriptMe AE", undefined, {resizeable: true});
     win.orientation = "column"; win.alignChildren = ["fill", "top"]; win.spacing = 7; win.margins = 10;
     win.minimumSize = [320, 350];
-    var title = win.add("statictext", undefined, "scriptMe AE   |   0.1.9");
+    var title = win.add("statictext", undefined, "scriptMe AE   |   0.1.10");
     var libraries = win.add("group");
     var choose = libraries.add("button", undefined, "Choose Library...");
     var openLibrary = libraries.add("button", undefined, "Open Library");
@@ -257,10 +257,12 @@
     };
     // Only fixed HTTPS endpoints are passed to the shell. Remote text is data,
     // never eval'd, executed, or used as a command/URL.
-    function downloadPackage() {
+    function downloadPackage(version) {
+        if (!/^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(version)) { throw new Error("Invalid download version."); }
+        var packageURL = DOWNLOAD_URL.replace("scriptMeAE.zip", "scriptMeAE_v" + version + ".zip");
         var command = /mac/i.test($.os) ?
-            "/usr/bin/open '" + DOWNLOAD_URL + "' 2>&1" :
-            'cmd.exe /c start "" "' + DOWNLOAD_URL + '"';
+            "/usr/bin/open '" + packageURL + "' 2>&1" :
+            'cmd.exe /c start "" "' + packageURL + '"';
         var result = system.callSystem(command);
         if (result && /\S/.test(result)) { throw new Error("Could not start download. Download manually: " + DOWNLOAD_URL); }
     }
@@ -298,7 +300,7 @@
             setStatus(heading);
             if (confirm(heading + "\n\nInstalled: " + VERSION + "\nPublic download: " + info.version +
                 "\n\n" + info.notes + "\n\nDownload the ZIP (script + installation README)? Installation is manual.")) {
-                downloadPackage();
+                downloadPackage(info.version);
             }
         } catch (e) {
             setStatus("Update check unavailable. Your installed launcher is unchanged.");
