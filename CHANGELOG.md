@@ -1,5 +1,11 @@
 # Changes
 
+## 0.1.8
+- Removes Run Other and the folder action-button mode; folder double-click and arrow keys remain.
+- Adds an explicit version check and change notes. This version opens the repository page for downloading; direct ZIP downloads are in the next candidate.
+- Now packaged as a ZIP with a plain-text installation README.
+- Drew reports this version works as expected in AE; OS/AE version and comprehensive cross-platform coverage remain unconfirmed.
+
 ## 0.1.7
 - Folder double-click expands/collapses the folder reliably through the panel callback.
 - Script double-click continues to run the selected script.

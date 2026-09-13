@@ -1,4 +1,4 @@
 scriptMeAE-update-1
-0.1.7
-Folder double-click expands/collapses folders. Script double-click runs scripts.
-Includes the earlier Finder-opening fix and _scriptMeAE Files project-folder naming.
+0.1.8
+Simplified controls and a manual update check with change notes.
+Download package includes the JSX and installation README. Installation is manual.

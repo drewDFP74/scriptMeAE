@@ -1,7 +1,10 @@
-/* scriptMe AE v0.1.7 — native ScriptUI / ExtendScript (ES3)
+/* scriptMe AE v0.1.8 — native ScriptUI / ExtendScript (ES3)
    Install in Scripts/ScriptUI Panels. See README.md. */
 (function (host) {
     var KEY = "DFP_scriptMe_AE", GLOBAL = "__DFP_scriptMeAE_v1";
+    var VERSION = "0.1.8";
+    var PUBLIC_REPO = "https://github.com/drewDFP74/scriptMeAE";
+    var UPDATE_URL = "https://raw.githubusercontent.com/drewDFP74/scriptMeAE/main/latest.txt";
     var self = File($.fileName).absoluteURI;
     var prior = $.global[GLOBAL];
     if (prior && prior.dispose) { prior.dispose(); }
@@ -23,7 +26,7 @@
     var win = host instanceof Panel ? host : new Window("palette", "scriptMe AE", undefined, {resizeable: true});
     win.orientation = "column"; win.alignChildren = ["fill", "top"]; win.spacing = 7; win.margins = 10;
     win.minimumSize = [320, 350];
-    var title = win.add("statictext", undefined, "scriptMe AE   |   0.1.7");
+    var title = win.add("statictext", undefined, "scriptMe AE   |   0.1.8");
     var libraries = win.add("group");
     var choose = libraries.add("button", undefined, "Choose Library...");
     var openLibrary = libraries.add("button", undefined, "Open Library");
@@ -39,13 +42,14 @@
     var filter = win.add("edittext", undefined, ""); filter.helpTip = "Search script names and relative folder paths";
     var list = win.add("listbox", undefined, [], {multiselect: false});
     var expandedFolders = {}, searchFolders = {}, searchQuery = "", changingTree = false;
-    list.helpTip = "Double-click a folder to expand/collapse, or select it and use the button below. Double-click a script to run it.";
+    list.helpTip = "Double-click a folder to expand/collapse, or use Left/Right. Double-click a script to run it.";
     list.alignment = ["fill", "fill"]; list.preferredSize = [440, 260];
     var pathText = win.add("edittext", undefined, "", {readonly: true});
     pathText.helpTip = "Full path of the selected script";
     var actions = win.add("group");
     var run = actions.add("button", undefined, "Run Script"); run.enabled = false;
-    var browse = actions.add("button", undefined, "Run Other...");
+    var updates = actions.add("button", undefined, "Check for Updates");
+    updates.helpTip = "Check the public download repository. Installation is manual.";
     var status = win.add("statictext", undefined, ""); status.characters = 45;
     var lastScan = 0;
     function setStatus(text) { status.text = text; status.helpTip = text; }
@@ -86,8 +90,8 @@
     function selectionChanged() {
         var entry = selected(), row = list.selection;
         var isFolder = row && row.folderKey;
-        run.text = isFolder ? (row.isOpen ? "Collapse Folder" : "Expand Folder") : "Run Script";
-        run.enabled = (!!entry || !!isFolder) && !state.busy && !state.disposed;
+        run.text = "Run Script";
+        run.enabled = !!entry && !state.busy && !state.disposed;
         pathText.text = entry ? entry.file.fsName : "";
     }
     function folderOpen(key, section) {
@@ -185,7 +189,7 @@
         if (!file || !/\.(jsx|jsxbin)$/i.test(nameOf(file))) { alert("Choose a .jsx or .jsxbin script."); return; }
         if (!file.exists) { alert("Script is no longer available:\n" + file.fsName); rescan(true); return; }
         if (file.absoluteURI === self) { alert("This launcher cannot run itself."); return; }
-        state.busy = true; run.enabled = false; browse.enabled = false;
+        state.busy = true; run.enabled = false; updates.enabled = false;
         var oldFolder = Folder.current, error = null;
         try {
             Folder.current = file.parent;
@@ -194,7 +198,7 @@
             $.evalFile(file);
         } catch (e) { error = e; }
         finally {
-            Folder.current = oldFolder; state.busy = false; browse.enabled = true; selectionChanged();
+            Folder.current = oldFolder; state.busy = false; updates.enabled = true; selectionChanged();
         }
         rescan(false);
         if (error) {
@@ -244,18 +248,70 @@
         // Recheck the current project at click time, even if polling has not fired.
         var entry = selected();
         if (state.project !== projectKey()) { rescan(true); setStatus("Project changed. Select a script again."); return; }
-        if (list.selection && list.selection.folderKey) { toggleFolder(); return; }
         if (entry) { execute(entry.file); }
     };
-    list.onDoubleClick = run.onClick;
-    browse.onClick = function () {
-        var f = File.openDialog("Choose an After Effects script (.jsx or .jsxbin)");
-        if (f) { execute(f); }
+    list.onDoubleClick = function () {
+        if (state.project !== projectKey()) { rescan(true); setStatus("Project changed. Select a script again."); return; }
+        if (list.selection && list.selection.folderKey) { toggleFolder(); }
+        else { run.onClick(); }
+    };
+    // Only fixed HTTPS endpoints are passed to the shell. Remote text is data,
+    // never eval'd, executed, or used as a command/URL.
+    function openDownloadPage() {
+        var command = /mac/i.test($.os) ?
+            "/usr/bin/open '" + PUBLIC_REPO + "' 2>&1" :
+            'cmd.exe /c start "" "' + PUBLIC_REPO + '"';
+        var result = system.callSystem(command);
+        if (result && /\S/.test(result)) { throw new Error("Could not open browser. Visit " + PUBLIC_REPO); }
+    }
+    function parseUpdate(text) {
+        if (!text || text.length > 16000) { throw new Error("No valid update information received."); }
+        var lines = text.replace(/\r/g, "").split("\n");
+        if (lines[0] !== "scriptMeAE-update-1" || !/^\d{1,4}\.\d{1,4}\.\d{1,4}$/.test(lines[1] || "")) {
+            throw new Error("Update information is unavailable or has an unexpected format.");
+        }
+        return {version: lines[1], notes: lines.slice(2).join("\n")};
+    }
+    function compareVersion(a, b) {
+        var aa = a.split("."), bb = b.split(".");
+        for (var i = 0; i < 3; i++) {
+            var x = parseInt(aa[i], 10), y = parseInt(bb[i], 10);
+            if (x !== y) { return x > y ? 1 : -1; }
+        }
+        return 0;
+    }
+    updates.onClick = function () {
+        if (state.busy || state.disposed) { return; }
+        state.busy = true; updates.enabled = false; run.enabled = false;
+        setStatus("Checking for updates...");
+        try {
+            // callSystem is synchronous; requests have finite timeouts.
+            var command = /mac/i.test($.os) ?
+                "/usr/bin/curl --fail --silent --show-error --connect-timeout 5 --max-time 15 --max-filesize 16000 '" + UPDATE_URL + "' 2>&1" :
+                'powershell.exe -NoLogo -NoProfile -NonInteractive -Command "try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $r = Invoke-WebRequest -UseBasicParsing -TimeoutSec 15 -Uri \''
+                + UPDATE_URL + '\'; if ($r.Content.Length -gt 16000) { throw \'Response too large\' }; [Console]::Write($r.Content) } catch { [Console]::Write(\'UPDATE_ERROR\') }"';
+            var info = parseUpdate(system.callSystem(command));
+            var difference = compareVersion(info.version, VERSION);
+            var heading = difference > 0 ? "A newer version is available." :
+                difference === 0 ? "You have the latest published version." :
+                "Your installed version is newer than the public download.";
+            setStatus(heading);
+            if (confirm(heading + "\n\nInstalled: " + VERSION + "\nPublic download: " + info.version +
+                "\n\n" + info.notes + "\n\nOpen the download page? Installation is manual.")) {
+                openDownloadPage();
+            }
+        } catch (e) {
+            setStatus("Update check unavailable. Your installed launcher is unchanged.");
+            alert("Could not check for updates.\n\n" + e.toString() +
+                "\n\nCheck your internet connection and AE scripting permissions, or visit:\n" + PUBLIC_REPO);
+        } finally {
+            state.busy = false; updates.enabled = !state.disposed; selectionChanged();
+        }
     };
     state.dispose = function () {
         state.disposed = true;
         if (state.task !== null) { try { app.cancelTask(state.task); } catch (e) {} state.task = null; }
-        run.enabled = false; browse.enabled = false; setStatus("Inactive instance; use the most recently opened panel.");
+        run.enabled = false; updates.enabled = false; setStatus("Inactive instance; use the most recently opened panel.");
     };
     state.tick = function () {
         if (state.disposed) { return; }
