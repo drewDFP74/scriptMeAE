@@ -1,4 +1,4 @@
 scriptMeAE-update-1
-0.1.8
-Simplified controls and a manual update check with change notes.
-Download package includes the JSX and installation README. Installation is manual.
+0.1.9
+Direct ZIP download without a GitHub landing page.
+Versioned ZIP and extracted folder include the JSX and installation README.

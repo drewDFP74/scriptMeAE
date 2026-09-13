@@ -1,5 +1,9 @@
 # Changes
 
+## 0.1.9
+- Direct ZIP download without a repository landing page; accepted by Drew.
+- Versioned distribution: scriptMeAE_v0.1.9.zip extracts into scriptMeAE_v0.1.9/.
+
 ## 0.1.8
 - Removes Run Other and the folder action-button mode; folder double-click and arrow keys remain.
 - Adds an explicit version check and change notes. This version opens the repository page for downloading; direct ZIP downloads are in the next candidate.

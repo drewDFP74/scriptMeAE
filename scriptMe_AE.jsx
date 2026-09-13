@@ -1,9 +1,9 @@
-/* scriptMe AE v0.1.8 — native ScriptUI / ExtendScript (ES3)
+/* scriptMe AE v0.1.9 — native ScriptUI / ExtendScript (ES3)
    Install in Scripts/ScriptUI Panels. See README.md. */
 (function (host) {
     var KEY = "DFP_scriptMe_AE", GLOBAL = "__DFP_scriptMeAE_v1";
-    var VERSION = "0.1.8";
-    var PUBLIC_REPO = "https://github.com/drewDFP74/scriptMeAE";
+    var VERSION = "0.1.9";
+    var DOWNLOAD_URL = "https://github.com/drewDFP74/scriptMeAE/raw/refs/heads/main/scriptMeAE.zip";
     var UPDATE_URL = "https://raw.githubusercontent.com/drewDFP74/scriptMeAE/main/latest.txt";
     var self = File($.fileName).absoluteURI;
     var prior = $.global[GLOBAL];
@@ -26,7 +26,7 @@
     var win = host instanceof Panel ? host : new Window("palette", "scriptMe AE", undefined, {resizeable: true});
     win.orientation = "column"; win.alignChildren = ["fill", "top"]; win.spacing = 7; win.margins = 10;
     win.minimumSize = [320, 350];
-    var title = win.add("statictext", undefined, "scriptMe AE   |   0.1.8");
+    var title = win.add("statictext", undefined, "scriptMe AE   |   0.1.9");
     var libraries = win.add("group");
     var choose = libraries.add("button", undefined, "Choose Library...");
     var openLibrary = libraries.add("button", undefined, "Open Library");
@@ -49,7 +49,7 @@
     var actions = win.add("group");
     var run = actions.add("button", undefined, "Run Script"); run.enabled = false;
     var updates = actions.add("button", undefined, "Check for Updates");
-    updates.helpTip = "Check the public download repository. Installation is manual.";
+    updates.helpTip = "Check for updates and download the ZIP with installation instructions.";
     var status = win.add("statictext", undefined, ""); status.characters = 45;
     var lastScan = 0;
     function setStatus(text) { status.text = text; status.helpTip = text; }
@@ -257,12 +257,12 @@
     };
     // Only fixed HTTPS endpoints are passed to the shell. Remote text is data,
     // never eval'd, executed, or used as a command/URL.
-    function openDownloadPage() {
+    function downloadPackage() {
         var command = /mac/i.test($.os) ?
-            "/usr/bin/open '" + PUBLIC_REPO + "' 2>&1" :
-            'cmd.exe /c start "" "' + PUBLIC_REPO + '"';
+            "/usr/bin/open '" + DOWNLOAD_URL + "' 2>&1" :
+            'cmd.exe /c start "" "' + DOWNLOAD_URL + '"';
         var result = system.callSystem(command);
-        if (result && /\S/.test(result)) { throw new Error("Could not open browser. Visit " + PUBLIC_REPO); }
+        if (result && /\S/.test(result)) { throw new Error("Could not start download. Download manually: " + DOWNLOAD_URL); }
     }
     function parseUpdate(text) {
         if (!text || text.length > 16000) { throw new Error("No valid update information received."); }
@@ -297,13 +297,13 @@
                 "Your installed version is newer than the public download.";
             setStatus(heading);
             if (confirm(heading + "\n\nInstalled: " + VERSION + "\nPublic download: " + info.version +
-                "\n\n" + info.notes + "\n\nOpen the download page? Installation is manual.")) {
-                openDownloadPage();
+                "\n\n" + info.notes + "\n\nDownload the ZIP (script + installation README)? Installation is manual.")) {
+                downloadPackage();
             }
         } catch (e) {
             setStatus("Update check unavailable. Your installed launcher is unchanged.");
             alert("Could not check for updates.\n\n" + e.toString() +
-                "\n\nCheck your internet connection and AE scripting permissions, or visit:\n" + PUBLIC_REPO);
+                "\n\nCheck your internet connection and AE scripting permissions, or download the ZIP manually:\n" + DOWNLOAD_URL);
         } finally {
             state.busy = false; updates.enabled = !state.disposed; selectionChanged();
         }
