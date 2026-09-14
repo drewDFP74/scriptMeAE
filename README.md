@@ -23,8 +23,3 @@ It also keeps project-specific scripts with the project they were created for. S
 5. Choose your script library. For project scripts, save the AE project and use Open Project Scripts to create/open _scriptMeAE Files beside it.
 
 Double-click folders to expand and scripts to run. Refresh or Auto discovers new scripts without restarting AE. Replacing the launcher itself requires restarting AE. Enable Allow Scripts To Write Files And Access Network in AE's Scripting & Expressions preferences when needed for folder creation or your scripts.
-
-## Validation
-The developer's user reported v0.1.10 works as expected and confirmed the update-check flow in AE. Automated tests use a simulated host; they do not establish complete compatibility with every AE/macOS/Windows version.
-
-This repository presents the current usable download. Development candidates are not advertised as updates until accepted after relevant AE testing. Installation is manual; no automatic replacement is provided.
