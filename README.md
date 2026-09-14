@@ -1,6 +1,13 @@
 # scriptMe AE
 
-A dockable After Effects script launcher for a persistent library and project-specific scripts.
+By Drew Findley, DF Productions, LLC
+
+Build: v0.1.10 — September 13, 2026
+README updated: September 14, 2026
+
+scriptMe AE is a dockable panel that keeps your After Effects scripts close at hand. Choose a persistent script library, then browse and run scripts directly from the panel instead of searching through Finder or File Explorer each time. Add new scripts to your library and use Refresh or Auto to make them available without relaunching After Effects.
+
+It also keeps project-specific scripts with the project they were created for. Store them in the `_scriptMeAE Files` folder beside your saved After Effects project, and the panel loads that project's scripts when you open or switch projects. Your shared library remains available across projects.
 
 ## Current download: v0.1.10
 
